@@ -1,0 +1,18 @@
+{
+  "author": "",
+  "name": "radio-bot",
+  "description": "Radio Slackbot",
+  "version": "0.0.1",
+  "repository": {
+    "url": ""
+  },
+  "dependencies": {
+    "shelljs": "^0.5.3",
+    "slackbots": "^0.5.0"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
