@@ -1,9 +1,10 @@
+require('dotenv').config();
 var SlackBot = require('slackbots');
 var shell = require('shelljs');
  
 // create a bot 
 var bot = new SlackBot({
-    token: 'xoxb-18125469174-H9FLqhfrO6ywM4eBupac44Rj', // Add a bot https://my.slack.com/services/new/bot and put the token  
+    token: process.env.SLACK_BOT_TOKEN, // Add a bot https://my.slack.com/services/new/bot and put the token  
     name: 'radiobot'
 });
 
@@ -13,7 +14,7 @@ function isRunning(){
 
 function play() {
 	if (!isRunning()){
-		shell.exec('/home/pi/radio.sh');
+		shell.exec('./play.sh');
 	}
 }
 
@@ -57,18 +58,19 @@ bot.on('start', function() {
 bot.on('message', function(data) {
     if ('message' === data.type) {
 	console.log(data.text);
-	if ('status' === data.text) {
+	var message = data.text.toLowerCase();
+	if ('status' === message) {
 		var userName = findUserNameById(data.user);
 		bot.postMessageToUser(userName, isRunning() ? 'Playing :thumbsup:' : 'Not Playing :thumbsup:' , {});	
-	} else if ('stop' === data.text) {
+	} else if ('stop' === message) {
 		var userName = findUserNameById(data.user);
 		stop();
 		bot.postMessageToUser(userName, 'Stopping...', {});
-	} else if ('play' === data.text) {
+	} else if ('play' === message) {
 		var userName = findUserNameById(data.user);
 		play();
 		bot.postMessageToUser(userName, 'Playing TripleJ', {});
-	} else if ('help' === data.text) {
+	} else if ('help' === message) {
 		var userName = findUserNameById(data.user);
 		bot.postMessageToUser(userName, 'I know commands `status`, `play`, `stop`', {});
 	}
