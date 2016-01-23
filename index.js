@@ -70,3 +70,8 @@ bot.on('message', function(data) {
         }
     }
 });
+
+bot.on('close', function(){
+    // Run this inside forever, this will restart a new process
+    process.exit();
+});
