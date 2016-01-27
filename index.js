@@ -105,8 +105,12 @@ router.register('play', function(bot, userName, args) {
         // Check station exists
         var station = args[1];
         if (list.hasOwnProperty(station)) {
-            play(list[station]);
+            if (isRunning()){
+                bot.postMessageToUser(userName, 'Stopping other playback');
+                stop();
+            }
             bot.postMessageToUser(userName, 'Playing ' + station, {});
+            play(list[station]);
         } else {
             bot.postMessageToUser(userName, "I don't have anything on record for `" + station + "`. Try `play {station}` with one of these stations: `" + stations + "`");
 
