@@ -10,6 +10,13 @@ var bot = new SlackBot({
     name: 'radiobot'
 });
 
+/**
+ * Global message params
+ */
+var messageParams = {
+    icon_emoji: ':radio:'
+};
+
 function isRunning() {
     return shell.test('-f', '/tmp/vlc.pid');
 }
@@ -56,6 +63,29 @@ function findUserNameById(id) {
     return null;
 }
 
+function isListEmpty(list) {
+    for(var key in list) {
+        if (list.hasOwnProperty(key)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function messageFromStationList(list) {
+    if (!isListEmpty(list)) {
+        var message = "*Stations:* \n ```";
+        for (var station in list) {
+            message += "\n- " + station
+        }
+
+        message += "\n```";
+        return message;
+    } else {
+        return "*No Stations!* - Add one with `add {stationName} {url}`";
+    }
+}
+
 function SlargRouter(bot) {
     this.routes = [];
     this.bot = bot;
@@ -83,12 +113,12 @@ SlargRouter.prototype.register = function(command, callback) {
 var router = new SlargRouter();
 
 router.register('status', function(bot, userName, args) {
-    bot.postMessageToUser(userName, isRunning() ? 'Playing :thumbsup:' : 'Not Playing :thumbsup:', {});
+    bot.postMessageToUser(userName, isRunning() ? 'Playing :thumbsup:' : 'Not Playing :thumbsup:', messageParams);
 });
 
 router.register('stop', function(bot, userName, args) {
     stop();
-    bot.postMessageToUser(userName, 'Stopping...', {});
+    bot.postMessageToUser(userName, 'Stopping...', messageParams);
 });
 
 router.register('play', function(bot, userName, args) {
@@ -100,34 +130,31 @@ router.register('play', function(bot, userName, args) {
 
     if (args.length < 2) {
         // No station here
-        bot.postMessageToUser(userName, "Try `play {station}` with one of these stations: `" + stations + "`");
+        bot.postMessageToUser(userName, "Try `play {station}` with one of these stations: `" + stations + "`", messageParams);
     } else {
         // Check station exists
         var station = args[1];
         if (list.hasOwnProperty(station)) {
             if (isRunning()){
-                bot.postMessageToUser(userName, 'Stopping other playback');
+                bot.postMessageToUser(userName, 'Stopping other playback', messageParams);
                 stop();
             }
-            bot.postMessageToUser(userName, 'Playing ' + station, {});
+            bot.postMessageToUser(userName, 'Playing ' + station, messageParams);
             play(list[station]);
         } else {
-            bot.postMessageToUser(userName, "I don't have anything on record for `" + station + "`. Try `play {station}` with one of these stations: `" + stations + "`");
-
+            bot.postMessageToUser(userName, "I don't have anything on record for `" + station + "`. Try `play {station}` with one of these stations: `" + stations + "`", messageParams);
         }
     }
-
 });
 
 router.register('list', function(bot, userName, args) {
     var list = getList();
-    console.log(list);
-    bot.postMessageToUser(userName, '`'+JSON.stringify(list)+'`', {});
+    bot.postMessageToUser(userName, messageFromStationList(list), messageParams);
 });
 
 router.register('add', function(bot, userName, args) {
     if (args.length < 3) {
-        bot.postMessageToUser(userName, "Need three args!");
+        bot.postMessageToUser(userName, "Need three args!", messageParams);
     } else {
         var list = getList();
         var key = args[1];
@@ -149,22 +176,23 @@ router.register('add', function(bot, userName, args) {
         }
 
         setList(list);
-        bot.postMessageToUser(userName, '`'+JSON.stringify(list)+'`', {});
+        var message = "Added " + key + " to station list.\n" + messageFromStationList(list);
+        bot.postMessageToUser(userName, message, messageParams);
     }
 });
 
 router.register('remove', function(bot, userName, args) {
     if (args.length < 2) {
-        bot.postMessageToUser(userName, "You need two args here");
+        bot.postMessageToUser(userName, "You need two args here", messageParams);
     } else {
         var key = args[1];
         var list = getList();
         if (list.hasOwnProperty(key)) {
             delete list[key];
             setList(list);
-            bot.postMessageToUser(userName, "Removed " + key);
+            bot.postMessageToUser(userName, "Removed " + key, messageParams);
         } else {
-            bot.postMessageToUser(userName, "Couldn't find key " + key);
+            bot.postMessageToUser(userName, "Couldn't find key " + key, messageParams);
         }
     }
 });
